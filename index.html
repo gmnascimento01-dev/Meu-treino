@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#0F172A"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Meu Treino"/>
+<title>Meu Treino — 5 Dias</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0F172A;--surface:#1E293B;--border:#334155;--text:#F1F5F9;--muted:#94A3B8;--dim:#64748B}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
+
+/* ── INSTALL BANNER ─────────────────────────────────── */
+#install-banner{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);display:flex;align-items:flex-end;justify-content:center;animation:fi .2s ease}
+#install-banner.hidden{display:none}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+#install-card{background:#1E293B;border-radius:24px 24px 0 0;padding:28px 22px 36px;width:100%;max-width:500px;border-top:1px solid #334155}
+.ic-logo{width:76px;height:76px;border-radius:20px;background:linear-gradient(135deg,#3B82F6,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 18px;box-shadow:0 8px 30px rgba(99,102,241,.4)}
+#install-card h2{font-size:21px;font-weight:700;text-align:center;margin-bottom:8px}
+#install-card .ic-sub{font-size:13px;color:#94A3B8;text-align:center;line-height:1.6;margin-bottom:22px}
+.ic-features{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:22px}
+.ic-feat{background:#0F172A;border-radius:12px;padding:12px 13px;display:flex;align-items:center;gap:10px}
+.ic-feat .ico{font-size:22px;flex-shrink:0}
+.ic-feat span{font-size:11px;color:#CBD5E1;line-height:1.4}
+#btn-install{width:100%;padding:17px;background:linear-gradient(135deg,#3B82F6,#6366F1);border:none;border-radius:14px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:.3px;margin-bottom:12px;box-shadow:0 4px 24px rgba(99,102,241,.45)}
+#btn-install:active{transform:scale(.98)}
+#btn-skip{width:100%;padding:12px;background:none;border:none;color:#64748B;font-size:13px;cursor:pointer}
+
+/* ── INSTALL CHIP ───────────────────────────────────── */
+#install-chip{display:none;align-items:center;gap:5px;background:linear-gradient(135deg,#3B82F622,#6366F122);border:1px solid #6366F155;border-radius:20px;padding:5px 11px 5px 8px;cursor:pointer;font-size:11px;font-weight:600;color:#818CF8;margin-left:auto;flex-shrink:0}
+#install-chip.visible{display:flex}
+
+/* ── APP SHELL ──────────────────────────────────────── */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+#topbar{background:var(--surface);border-bottom:1px solid var(--border);padding-top:max(env(safe-area-inset-top),14px);flex-shrink:0;z-index:10}
+.topbar-inner{padding:0 14px 10px;display:flex;align-items:center;gap:8px}
+.tb-text{flex:1}
+.tb-text h1{font-size:14px;font-weight:700;color:var(--text)}
+.tb-text p{font-size:10px;color:var(--dim);margin-top:1px}
+
+#daytabs{display:flex;overflow-x:auto;gap:6px;padding:10px 13px;background:var(--surface);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0}
+#daytabs::-webkit-scrollbar{display:none}
+.daytab{flex-shrink:0;border:1.5px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer;background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .15s;min-width:60px;position:relative}
+.daytab.active{transform:scale(1.04)}
+.daytab .emoji{font-size:17px}
+.daytab .dlabel{font-size:9px;font-weight:700;color:var(--muted)}
+.daytab .dtitle{font-size:8px;color:var(--dim)}
+.daytab .dprog{font-size:8px;font-weight:700;margin-top:1px}
+
+#subtabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 13px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+#subtabs::-webkit-scrollbar{display:none}
+.subtab{background:none;border:none;cursor:pointer;padding:10px 12px;font-size:12px;font-weight:600;color:var(--dim);white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.subtab.active{color:var(--text);border-bottom-color:#3B82F6}
+
+#content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:13px 13px 100px}
+
+/* ── DAY HEADER ─────────────────────────────────────── */
+.dayheader{border-radius:14px;padding:14px 15px;margin-bottom:10px}
+.dayheader h2{font-size:15px;font-weight:700;margin-bottom:4px}
+.dayheader .dfocus{font-size:12px;color:#CBD5E1;line-height:1.5}
+.warmup-box{background:rgba(0,0,0,.35);border-radius:8px;padding:10px 12px;margin-top:10px}
+.wlbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.warmup-box p{font-size:11px;color:#CBD5E1;margin-top:3px;line-height:1.5}
+
+/* ── PROGRESS BAR ───────────────────────────────────── */
+.prog-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.prog-label{font-size:12px;font-weight:600;color:var(--text)}
+.prog-right{display:flex;align-items:center;gap:8px}
+.prog-count{font-size:12px;font-weight:700}
+.prog-track{height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1)}
+.reset-day-btn{background:none;border:1px solid var(--border);border-radius:7px;color:var(--dim);font-size:11px;padding:3px 9px;cursor:pointer}
+.reset-day-btn:active{background:var(--border);color:var(--text)}
+
+/* ── EXERCISE CARD ──────────────────────────────────── */
+.ex-card{
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:12px;
+  margin-bottom:7px;
+  overflow:hidden;
+  transition:background .25s, border-color .25s;
+}
+/* DONE STATE */
+.ex-card.is-done{
+  background:#052e16;
+  border-color:#10B98155;
+}
+.ex-card.is-done .ex-name{
+  text-decoration:line-through;
+  color:#6EE7B7;
+  opacity:.7;
+}
+.ex-card.is-done .ex-chip{
+  opacity:.5;
+}
+
+.ex-row{display:flex;align-items:center;gap:10px;padding:13px 13px;cursor:pointer;user-select:none}
+.ex-badge{border-radius:7px;padding:4px 7px;font-size:10px;font-weight:700;min-width:30px;text-align:center;flex-shrink:0}
+.ex-name{font-size:13px;font-weight:600;flex:1;line-height:1.3;transition:all .25s}
+.ex-chip{background:var(--bg);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--muted)}
+.chevron{font-size:14px;transition:transform .2s;flex-shrink:0}
+.chevron.open{transform:rotate(180deg)}
+
+/* ── CHECKBOX ───────────────────────────────────────── */
+.cb-wrap{
+  width:30px;height:30px;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  /* Bigger tap target */
+  padding:2px;
+  cursor:pointer;
+  /* Stop from triggering parent toggle */
+  z-index:2;
+}
+.cb{
+  width:26px;height:26px;
+  border-radius:50%;
+  border:2.5px solid #94A3B8;
+  background:#0F172A;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+  box-shadow:0 0 0 1px rgba(148,163,184,.15);
+}
+.cb svg{
+  width:13px;height:13px;
+  stroke:#fff;
+  stroke-width:2.5;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  fill:none;
+  opacity:0;
+  transform:scale(.5);
+  transition:all .2s cubic-bezier(.4,0,.2,1);
+}
+/* CHECKED STATE */
+.cb-wrap.checked .cb{
+  background:#10B981;
+  border-color:#10B981;
+  box-shadow:0 0 12px rgba(16,185,129,.5);
+}
+.cb-wrap.checked .cb svg{
+  opacity:1;
+  transform:scale(1);
+}
+
+/* ── EXPANDED DETAIL ────────────────────────────────── */
+.ex-detail{padding:0 13px 13px;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.dbox{background:var(--bg);border-radius:8px;padding:9px 12px}
+.dlbl{font-size:9px;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.dval{font-size:14px;font-weight:700;margin-top:3px}
+.dbox.full{grid-column:1/-1}
+.dbox.full .dval{font-size:12px;color:#CBD5E1;line-height:1.55;font-weight:400}
+
+/* Mark done button inside detail */
+.mark-btn{
+  grid-column:1/-1;
+  padding:12px;
+  border-radius:10px;
+  border:none;
+  font-size:13px;font-weight:700;
+  cursor:pointer;
+  transition:all .2s;
+  width:100%;
+}
+.mark-btn.undone{background:#10B98118;border:1.5px solid #334155;color:#64748B}
+.mark-btn.undone:active{background:#10B98130}
+.mark-btn.isdone{background:#10B98122;border:1.5px solid #10B98166;color:#10B981}
+.mark-btn.isdone:active{background:#10B98130}
+
+/* ── TIMER ──────────────────────────────────────────── */
+.timer-wrap{grid-column:1/-1;background:var(--bg);border-radius:8px;padding:11px 13px}
+.timer-row{display:flex;align-items:center;gap:8px;margin-top:5px}
+.timer-disp{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;flex:1;letter-spacing:1px;color:var(--text)}
+.timer-disp.running{color:#10B981}
+.timer-disp.done{color:#EF4444;animation:pulse .5s infinite alternate}
+@keyframes pulse{from{opacity:1}to{opacity:.4}}
+.tbtn{background:var(--surface);border:none;cursor:pointer;font-size:20px;border-radius:8px;padding:6px 10px;color:var(--text)}
+.tbtn.play{font-size:22px;background:linear-gradient(135deg,#3B82F6,#6366F1);border-radius:10px;padding:8px 14px}
+.tbtn:active{transform:scale(.9)}
+
+/* ── CARDIO BOX ─────────────────────────────────────── */
+.cardio-box{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:13px 14px;margin-bottom:10px}
+.clbl{font-size:9px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.8px}
+.cardio-box p{font-size:12px;color:#CBD5E1;margin-top:5px;line-height:1.55}
+
+/* ── OTHER TABS ─────────────────────────────────────── */
+.sched-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:14px}
+.sday{border-radius:8px;padding:8px 4px;text-align:center}
+.sday .sd{font-size:9px;color:var(--dim);font-weight:600}
+.sday .si{font-size:13px;margin:3px 0}
+.sday .st{font-size:8px;font-weight:700}
+.freq-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 13px;margin-bottom:8px}
+.freq-days{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.freq-day{border-radius:5px;padding:2px 9px;font-size:10px;font-weight:600}
+.pc{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:13px;margin-bottom:8px;display:flex;gap:12px}
+.pi{font-size:22px;flex-shrink:0}
+.pc h4{font-size:13px;font-weight:700;margin-bottom:4px}
+.pc p{font-size:12px;color:var(--muted);line-height:1.6}
+.info-box{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:12px}
+.info-box h3{font-size:14px;font-weight:700;margin-bottom:6px}
+.info-box p{font-size:12px;color:var(--muted);line-height:1.65}
+.warn-box{border-color:#EF444455}
+.warn-box h4{color:#EF4444;font-size:13px;font-weight:700;margin-bottom:6px}
+.sec-lbl{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.9px;margin:14px 0 8px}
+.vol-badge{font-size:10px;font-weight:700;border-radius:6px;padding:3px 10px;white-space:nowrap}
+
+/* ── WEIGHT LOG ─────────────────────────────────────── */
+.weight-row{grid-column:1/-1;display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:8px;padding:11px 13px}
+.weight-row .dlbl{margin-bottom:0;flex-shrink:0}
+.weight-input-wrap{display:flex;align-items:center;gap:6px;flex:1}
+.weight-input{background:#0F172A;border:1.5px solid #334155;border-radius:8px;color:#F1F5F9;font-size:15px;font-weight:700;width:80px;padding:7px 10px;text-align:center;-moz-appearance:textfield}
+.weight-input::-webkit-outer-spin-button,.weight-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.weight-input:focus{outline:none;border-color:#3B82F6}
+.weight-unit{font-size:12px;color:#64748B;font-weight:600}
+.weight-last{font-size:10px;color:#10B981;font-weight:600;margin-left:auto;white-space:nowrap}
+.weight-save-btn{background:linear-gradient(135deg,#3B82F6,#6366F1);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;padding:7px 13px;cursor:pointer;flex-shrink:0}
+.weight-save-btn:active{transform:scale(.95)}
+
+/* ── AUTO-RESET BADGE ───────────────────────────────── */
+.reset-timer-badge{font-size:9px;color:#F59E0B;font-weight:600;background:#F59E0B18;border:1px solid #F59E0B44;border-radius:5px;padding:2px 7px;white-space:nowrap}
+
+/* ── AUTO-RESET TOAST ───────────────────────────────── */
+#toast{
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:#1E293B;border:1px solid #10B98155;border-radius:12px;
+  padding:10px 18px;font-size:12px;color:#6EE7B7;font-weight:600;
+  opacity:0;transition:all .4s;z-index:500;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);pointer-events:none
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- INSTALL BANNER -->
+<div id="install-banner" class="hidden">
+  <div id="install-card">
+    <div class="ic-logo">🏋️</div>
+    <h2>Instalar Meu Treino</h2>
+    <p class="ic-sub">Adicione à tela inicial e acesse offline direto na academia, sem abrir o navegador.</p>
+    <div class="ic-features">
+      <div class="ic-feat"><span class="ico">⚡</span><span>Abre instantaneamente</span></div>
+      <div class="ic-feat"><span class="ico">📶</span><span>Funciona sem internet</span></div>
+      <div class="ic-feat"><span class="ico">⏱</span><span>Timer de descanso</span></div>
+      <div class="ic-feat"><span class="ico">🏠</span><span>Ícone na tela inicial</span></div>
+    </div>
+    <button id="btn-install">📲 Instalar agora</button>
+    <button id="btn-skip">Agora não</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- APP -->
+<div id="app">
+  <div id="topbar">
+    <div class="topbar-inner">
+      <div class="tb-text">
+        <h1>🏋️ Recomposição Corporal</h1>
+        <p>Push · Pull · Legs · Upper · Lower — 5×/semana</p>
+      </div>
+      <div id="install-chip" onclick="showBanner()">📲 Instalar</div>
+    </div>
+  </div>
+  <div id="daytabs"></div>
+  <div id="subtabs">
+    <button class="subtab active" onclick="switchTab('treino',this)">📋 Treino</button>
+    <button class="subtab" onclick="switchTab('semana',this)">📅 Semana</button>
+    <button class="subtab" onclick="switchTab('frequencia',this)">📊 Frequência</button>
+    <button class="subtab" onclick="switchTab('principios',this)">⚙️ Princípios</button>
+  </div>
+  <div id="content"></div>
+</div>
+
+<script>
+/* ══ DATA ═══════════════════════════════════════════════════ */
+const DAYS=[
+  {id:"A",label:"Dia 1",title:"Push A",sub:"Empurrar — Força",icon:"💪",color:"#3B82F6",
+   focus:"Compostos pesados. Peito como motor principal. Foco em carga máxima e progressão semana a semana.",
+   warmup:"10 min: Mobilidade de ombros, rotação torácica, 2×15 flexões leves.",
+   cardio:"🏃 HIIT 15 min: 30s sprint (14–16 km/h) / 90s caminhada · 6–8 ciclos.",volume:"~24 séries",
+   ex:[
+    {o:"A1",n:"Supino Reto com Barra",s:"5",r:"4–6",d:"3 min",tip:"Carga máxima. Desça em 3s, exploda na subida. Pés firmes no chão, arco lombar natural."},
+    {o:"A2",n:"Desenvolvimento Militar com Barra (em pé)",s:"4",r:"5–6",d:"3 min",tip:"Core contraído. Pressione acima da cabeça de forma explosiva. Não incline o tronco para trás."},
+    {o:"A3",n:"Supino Inclinado com Halteres (30°)",s:"3",r:"8–10",d:"2 min",tip:"Descida em 3s. Pause 1s na fase baixa. Ativa feixe clavicular do peitoral com maior amplitude."},
+    {o:"A4",n:"Elevação Lateral com Halteres",s:"4",r:"12–15",d:"75s",tip:"Cotovelos levemente dobrados. Eleve até a linha do ombro. Sem impulso do tronco."},
+    {o:"A5",n:"Crossover no Cabo (baixo para cima)",s:"3",r:"13–15",d:"75s",tip:"Contração máxima no centro. Cotovelos fixos levemente dobrados. Sinta o peitoral trabalhando."},
+    {o:"A6",n:"Tríceps Testa com Barra W",s:"3",r:"10–12",d:"75s",tip:"Cotovelos apontados ao teto. Desça até a testa com total controle. Fase excêntrica em 3s."},
+    {o:"A7",n:"Tríceps Pulley (corda)",s:"3",r:"13–15",d:"60s",tip:"Abra a corda ao final. Cabeça lateral do tríceps. Cotovelos fixos ao longo do tronco."},
+    {o:"A8",n:"Prancha + Hollow Body Hold",s:"3",r:"40s + 30s",d:"60s",tip:"Bi-set sem descanso entre os dois. Core como base de toda transferência de força."},
+   ]},
+  {id:"B",label:"Dia 2",title:"Pull A",sub:"Puxar — Força",icon:"🔙",color:"#10B981",
+   focus:"Costas espessas e largas. Bíceps como auxiliar. Cargas máximas nos compostos principais.",
+   warmup:"8 min: Band pull-aparts, rotação de manguito rotador, cardio leve.",
+   cardio:"🚶 Steady State 20 min: Esteira inclinação 8–10° a 5–6 km/h. Baixo impacto.",volume:"~23 séries",
+   ex:[
+    {o:"B1",n:"Levantamento Terra Convencional (Deadlift)",s:"5",r:"4–5",d:"3–4 min",tip:"Barra sobre o mediopé. Lombar neutra. Puxe o chão para longe. Maior exercício para recomposição."},
+    {o:"B2",n:"Remada Curvada com Barra (pronada)",s:"4",r:"5–6",d:"3 min",tip:"Tronco a ~45°. Puxe para o umbigo. Lombar neutra. Sem impulso do corpo."},
+    {o:"B3",n:"Puxada Frontal — pegada aberta (Lat Pulldown)",s:"3",r:"8–10",d:"2 min",tip:"Puxe para a clavícula. Cotovelos para baixo e para trás. Controle total na volta."},
+    {o:"B4",n:"Remada Unilateral com Halter",s:"3",r:"10 cada",d:"90s",tip:"Apoio no banco. Puxe cotovelo para trás e para cima. Amplitude máxima."},
+    {o:"B5",n:"Puxada Triângulo / Pulley Reto Fechado",s:"3",r:"12–15",d:"75s",tip:"Puxe para o abdome. Abra o peito no final. Espessura de dorsais e romboides."},
+    {o:"B6",n:"Rosca Direta com Barra W",s:"3",r:"8–10",d:"90s",tip:"Cotovelos fixos ao lado do tronco. Sem balanço. Amplitude total do movimento."},
+    {o:"B7",n:"Rosca Concentrada (Hammer) com Halteres",s:"3",r:"12–15",d:"60s",tip:"Pegada neutra. Ativa braquial e braquiorradial além do bíceps. Variação essencial."},
+    {o:"B8",n:"Ab Wheel + Elevação de Pernas",s:"3",r:"10–12 + 15",d:"60s",tip:"Ab wheel: saída lenta, retorno controlado. Elevação: sem balanço, core contraído."},
+   ]},
+  {id:"C",label:"Dia 3",title:"Legs A",sub:"Pernas — Força",icon:"🦵",color:"#EF4444",
+   focus:"Sessão mais exigente da semana. Agachamento como rei. Quadríceps como foco principal.",
+   warmup:"10 min: Mobilidade de quadril, glúteo bridge, agachamento livre sem carga 2×15.",
+   cardio:"🚶 Caminhada 20 min: Inclinação 10–12° a 5 km/h. Baixo impacto, alta queima calórica.",volume:"~26 séries",
+   ex:[
+    {o:"C1",n:"Agachamento Livre com Barra (Back Squat)",s:"5",r:"4–6",d:"3–4 min",tip:"Abaixo do paralelo. Joelhos para fora. Cintura escapular travada. O exercício mais importante do plano."},
+    {o:"C2",n:"Leg Press 45°",s:"4",r:"8–10",d:"2 min",tip:"Pés à largura dos ombros, posição média. Desça até ~90° de flexão. Amplitude total."},
+    {o:"C3",n:"Avanço Alternado com Halteres (Lunges)",s:"3",r:"10 cada",d:"90s",tip:"Joelho não ultrapassa a ponta do pé. Tronco ereto. Ótimo para glúteos e equilíbrio."},
+    {o:"C4",n:"Mesa Flexora (Leg Curl) — deitado",s:"4",r:"10–12",d:"90s",tip:"Excêntrico em 3–4s (fase de retorno lenta). Fundamental para isquiotibiais e prevenção de lesões."},
+    {o:"C5",n:"Cadeira Extensora",s:"3",r:"12–15",d:"75s",tip:"Contração isométrica de 1s no topo. Finalizador de quadríceps. Use carga moderada."},
+    {o:"C6",n:"Panturrilha em Pé (máquina ou Smith)",s:"4",r:"12–15",d:"60s",tip:"Calcanhar abaixo da plataforma até ponta do pé máxima. Amplitude total obrigatória."},
+    {o:"C7",n:"Plank com Elevação Alternada + Dead Bug",s:"3",r:"10 cada + 10",d:"60s",tip:"Bi-set de core. Antiextensão e antirotação. Base postural para os compostos pesados."},
+   ]},
+  {id:"D",label:"Dia 4",title:"Upper",sub:"Superior — Hipertrofia",icon:"🔥",color:"#8B5CF6",
+   focus:"Cargas moderadas, pump máximo, maior tempo sob tensão. Técnicas avançadas aplicadas.",
+   warmup:"8 min: Mobilidade de ombros, rotação torácica, 2×15 flexões.",
+   cardio:"🚴 HIIT 15 min em bicicleta: 20s máximo esforço / 40s suave · 12–15 ciclos.",volume:"~31 séries",
+   ex:[
+    {o:"D1",n:"Supino Reto com Halteres (pausa 2s baixo)",s:"4",r:"10–12",d:"90s",tip:"Halteres + pausa na fase baixa. Maior amplitude e ativação do que a barra. Diferente do Dia 1."},
+    {o:"D2",n:"Puxada Supinada (Underhand Lat Pulldown)",s:"4",r:"10–12",d:"90s",tip:"Pegada invertida. Maior ativação do bíceps e inferior do dorsal. Variação essencial."},
+    {o:"D3",n:"Desenvolvimento com Halteres (sentado)",s:"3",r:"10–12",d:"90s",tip:"Maior amplitude que barra. Rotação natural do ombro. Foco no deltoide médio e anterior."},
+    {o:"D4",n:"Crossover no Cabo (alto para baixo)",s:"3",r:"13–15",d:"75s",tip:"Feixe esternal do peitoral. Contração no centro. Cotovelos levemente dobrados."},
+    {o:"D5",n:"Remada Cavalinho (máquina) ou T-bar Row",s:"3",r:"12–15",d:"75s",tip:"Puxe para o umbigo. Espessura de dorsais e romboides. Ótimo volume de costas."},
+    {o:"D6",n:"Elevação Lateral — Drop Set (último)",s:"4",r:"12–15 + drop",d:"60s",tip:"No último set: reduza 30% da carga e vá até a falha. Pump total no deltoide médio."},
+    {o:"D7",n:"Rosca Scott com Barra W",s:"3",r:"10–12",d:"75s",tip:"Banco scott fixa o cotovelo. Elimina compensações. Isolamento puro de bíceps."},
+    {o:"D8",n:"Tríceps Extensão por Cima no Cabo (corda)",s:"3",r:"12–15",d:"75s",tip:"Cabeça longa do tríceps. Cotovelos atrás da cabeça, braços travados. Amplitude total."},
+    {o:"D9",n:"Encolhimento de Ombros com Halteres",s:"3",r:"15–20",d:"60s",tip:"Sem rotação. Suba direto. Trapézio superior essencial para simetria visual."},
+    {o:"D10",n:"Crunch na Polia + Rotação Russa com Anilha",s:"3",r:"15 + 20",d:"60s",tip:"Bi-set: reto abdominal + oblíquos. Fundamental para recomposição do tronco."},
+   ]},
+  {id:"E",label:"Dia 5",title:"Lower B",sub:"Pernas — Volume",icon:"⚡",color:"#F59E0B",
+   focus:"Volume alto com foco em posterior de coxa, glúteos e exercícios unilaterais.",
+   warmup:"10 min: Glúteo bridge com resistência, lateral band walk, agachamento na parede.",
+   cardio:"🚴 Steady State 20 min: Bicicleta nível 8–10. Baixo impacto pós-volume alto de perna.",volume:"~27 séries",
+   ex:[
+    {o:"E1",n:"Agachamento Búlgaro (Bulgarian Split Squat)",s:"4",r:"10 cada",d:"2 min",tip:"Pé traseiro no banco. Desça verticalmente. O melhor unilateral de membros inferiores."},
+    {o:"E2",n:"Stiff Deadlift (Romanian Deadlift) com Halteres",s:"4",r:"10–12",d:"2 min",tip:"Descida lenta ao longo das pernas, tração constante no isquiotibial. Até abaixo do joelho."},
+    {o:"E3",n:"Agachamento Frontal ou Hack Squat",s:"3",r:"8–10",d:"2 min",tip:"Hack squat: pressão segura sobre quadríceps. Front squat: mais core e dorsal engajado."},
+    {o:"E4",n:"Leg Curl Sentado (máquina)",s:"4",r:"12–15",d:"90s",tip:"Posição sentada ativa a cabeça longa do bíceps femoral. Excêntrico em 4s."},
+    {o:"E5",n:"Cadeira Adutora + Abdutora (bi-set)",s:"3+3",r:"15 + 15",d:"60s",tip:"Sem descanso entre os dois. Estabilidade pélvica e saúde do quadril."},
+    {o:"E6",n:"Panturrilha Sentado + Em pé unilateral",s:"3+2",r:"15–20 + 15 cada",d:"60s",tip:"Sentado ativa sóleo. Em pé ativa gastrocnêmio. Dupla estimulação da panturrilha."},
+    {o:"E7",n:"Plank Lateral + Elevação de Quadril (Hip Thrust)",s:"3",r:"30s + 15",d:"60s",tip:"Bi-set glúteo + core lateral. Hip thrust: barra sobre o quadril, elevação completa."},
+   ]},
+];
+
+const SCHEDULE=[
+  {dia:"Seg",treino:"Push A",icon:"💪",color:"#3B82F6"},
+  {dia:"Ter",treino:"Pull A",icon:"🔙",color:"#10B981"},
+  {dia:"Qua",treino:"Legs A",icon:"🦵",color:"#EF4444"},
+  {dia:"Qui",treino:"OFF",icon:"😴",color:"#334155"},
+  {dia:"Sex",treino:"Upper",icon:"🔥",color:"#8B5CF6"},
+  {dia:"Sáb",treino:"Lower B",icon:"⚡",color:"#F59E0B"},
+  {dia:"Dom",treino:"OFF",icon:"😴",color:"#334155"},
+];
+
+const FREQ=[
+  {m:"Peito",dias:["Push A","Upper"],f:2,c:"#3B82F6"},
+  {m:"Costas",dias:["Pull A","Upper"],f:2,c:"#10B981"},
+  {m:"Ombros",dias:["Push A","Upper"],f:2,c:"#8B5CF6"},
+  {m:"Bíceps",dias:["Pull A","Upper"],f:2,c:"#10B981"},
+  {m:"Tríceps",dias:["Push A","Upper"],f:2,c:"#3B82F6"},
+  {m:"Quadríceps",dias:["Legs A","Lower B"],f:2,c:"#EF4444"},
+  {m:"Isquiotibiais",dias:["Legs A","Lower B"],f:2,c:"#F59E0B"},
+  {m:"Glúteos",dias:["Legs A","Lower B"],f:2,c:"#F59E0B"},
+  {m:"Panturrilha",dias:["Legs A","Lower B"],f:2,c:"#EF4444"},
+  {m:"Core / Abdome",dias:["Push A","Pull A","Legs A","Upper","Lower B"],f:5,c:"#10B981"},
+];
+
+const PRINCIPLES=[
+  {i:"📈",t:"Sobrecarga Progressiva",d:"Aumente carga ou repetições toda semana. Sem progressão, não há adaptação. Anote cada treino."},
+  {i:"🍽️",t:"Proteína: Pilar da Recomposição",d:"2,2–2,5g/kg/dia. 109kg → 240–272g de proteína. Déficit calórico moderado de –300 a –400 kcal."},
+  {i:"😴",t:"Sono: o Anabolizante Gratuito",d:"7–9h/noite. Com 5 dias de treino, o sono torna-se ainda mais crítico para recuperação e síntese proteica."},
+  {i:"💧",t:"Hidratação",d:"~40ml/kg/dia. Para 109kg → mínimo de 4,4L de água. Fundamental para performance e recuperação."},
+  {i:"🔁",t:"Deload a cada 8–12 semanas",d:"Reduza volume em 50%. Mesmos exercícios, menos séries. Recuperação ativa previne overtraining."},
+  {i:"📊",t:"Monitoramento Real",d:"Fotos e medidas a cada 4 semanas. Com recomposição a balança pode enganar — confie nas medidas e no espelho."},
+];
+
+/* ══ STATE ══════════════════════════════════════════════════ */
+let activeDay=0, activeTab='treino', openEx=null, timers={};
+let deferredPrompt=null;
+
+/* ══ DATE-BASED AUTO RESET ══════════════════════════════════
+   Storage schema v3:
+   {
+     checks:      { "0": {0:true,2:true} },
+     completedAt: { "0": 1714300000000 },   // ms timestamp when day fully done
+     weights:     { "0_0": [{w:80,d:"26/04"}] } // weight log per day_ex
+   }
+   On load: if completedAt[i] exists and now - completedAt[i] > 8h → reset that day
+*/
+const EIGHT_HOURS = 8 * 60 * 60 * 1000;
+const STORAGE_KEY = 'treino-v3';
+
+function todayStr(){
+  const d=new Date();
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+let checks={};
+let completedAt={};
+let weightLog={};
+
+function loadStorage(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data=JSON.parse(raw);
+    checks=data.checks||{};
+    completedAt=data.completedAt||{};
+    weightLog=data.weights||{};
+    const now=Date.now();
+    let anyReset=false;
+    DAYS.forEach((_,i)=>{
+      if(completedAt[i] && (now - completedAt[i]) > EIGHT_HOURS){
+        checks[i]={};
+        delete completedAt[i];
+        anyReset=true;
+      }
+    });
+    if(anyReset){
+      saveStorage();
+      setTimeout(()=>showToast('🔄 Treino resetado — 8h após conclusão. Bora!'),600);
+    }
+  }catch(e){ checks={}; completedAt={}; weightLog={}; }
+}
+
+function saveStorage(){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify({checks,completedAt,weights:weightLog}));
+  }catch(e){}
+}
+
+function checkDayCompletion(dayIdx){
+  const{done,total}=getDayProgress(dayIdx);
+  if(done===total&&total>0){
+    if(!completedAt[dayIdx]){
+      completedAt[dayIdx]=Date.now();
+      saveStorage();
+      setTimeout(()=>showToast('🏆 Treino do dia concluído! Reset em 8h.'),300);
+    }
+  } else {
+    // Unchecked an item — remove completedAt so it won't reset early
+    if(completedAt[dayIdx]) delete completedAt[dayIdx];
+  }
+}
+
+function getResetCountdown(dayIdx){
+  if(!completedAt[dayIdx]) return null;
+  const remaining=EIGHT_HOURS-(Date.now()-completedAt[dayIdx]);
+  if(remaining<=0) return null;
+  const h=Math.floor(remaining/3600000);
+  const m=Math.floor((remaining%3600000)/60000);
+  return h>0?`Reset em ${h}h ${m}m`:`Reset em ${m}m`;
+}
+
+function isChecked(dayIdx,exIdx){
+  return !!(checks[dayIdx]&&checks[dayIdx][exIdx]);
+}
+
+function toggleCheck(dayIdx,exIdx,e){
+  e.stopPropagation();
+  if(!checks[dayIdx]) checks[dayIdx]={};
+  checks[dayIdx][exIdx]=!checks[dayIdx][exIdx];
+  saveStorage();
+  updateCheckUI(dayIdx,exIdx);
+  updateProgressUI(dayIdx);
+  checkDayCompletion(dayIdx);
+  renderDayTabs();
+}
+
+function resetDay(dayIdx){
+  checks[dayIdx]={};
+  delete completedAt[dayIdx];
+  saveStorage();
+  renderDayTabs();
+  renderContent();
+}
+
+function getDayProgress(dayIdx){
+  const total=DAYS[dayIdx].ex.length;
+  const done=Object.values(checks[dayIdx]||{}).filter(Boolean).length;
+  return{done,total,pct:total?Math.round(done/total*100):0};
+}
+
+/* ── In-place DOM update for checkbox (no full re-render) ── */
+function updateCheckUI(dayIdx,exIdx){
+  const cbWrap=document.getElementById(`cb-${dayIdx}-${exIdx}`);
+  const card=document.getElementById(`card-${dayIdx}-${exIdx}`);
+  const markBtn=document.getElementById(`mbtn-${dayIdx}-${exIdx}`);
+  const done=isChecked(dayIdx,exIdx);
+  if(cbWrap){
+    cbWrap.className='cb-wrap'+(done?' checked':'');
+  }
+  if(card){
+    card.className='ex-card'+(done?' is-done':'');
+  }
+  if(markBtn){
+    markBtn.className='mark-btn'+(done?' isdone':' undone');
+    markBtn.textContent=done?'✅ Marcar como não feito':'✔ Marcar como feito';
+  }
+}
+
+function updateProgressUI(dayIdx){
+  const {done,total,pct}=getDayProgress(dayIdx);
+  const allDone=done===total&&total>0;
+  const fill=document.getElementById(`pfill-${dayIdx}`);
+  const label=document.getElementById(`plabel-${dayIdx}`);
+  const count=document.getElementById(`pcount-${dayIdx}`);
+  const resetBtn=document.getElementById(`preset-${dayIdx}`);
+  if(fill){
+    fill.style.width=pct+'%';
+    fill.style.background=allDone?'#10B981':'linear-gradient(90deg,#10B981,#3B82F6)';
+    fill.style.boxShadow=allDone?'0 0 8px rgba(16,185,129,.5)':'none';
+  }
+  if(label) label.textContent=allDone?'✅ Treino concluído!':'Progresso do treino';
+  if(count){
+    count.textContent=`${done}/${total}`;
+    count.style.color=allDone?'#10B981':DAYS[dayIdx].color;
+  }
+  if(resetBtn) resetBtn.style.display=done>0?'':'none';
+}
+
+/* ══ TOAST ══════════════════════════════════════════════════ */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ══ PWA MANIFEST ═══════════════════════════════════════════ */
+(function(){
+  const m={name:"Meu Treino — Recomposição",short_name:"Meu Treino",
+    description:"Plano Push/Pull/Legs/Upper/Lower para recomposição corporal",
+    start_url:location.href,display:"standalone",
+    background_color:"#0F172A",theme_color:"#0F172A",orientation:"portrait-primary",
+    icons:[
+      {src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%230F172A'/%3E%3Ctext y='380' x='256' font-size='380' text-anchor='middle'%3E%F0%9F%8F%8B%EF%B8%8F%3C/text%3E%3C/svg%3E",sizes:"192x192",type:"image/svg+xml"},
+      {src:"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='115' fill='%230F172A'/%3E%3Ctext y='380' x='256' font-size='380' text-anchor='middle'%3E%F0%9F%8F%8B%EF%B8%8F%3C/text%3E%3C/svg%3E",sizes:"512x512",type:"image/svg+xml",purpose:"any maskable"}
+    ]};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(m)],{type:'application/json'}));
+  const l=document.createElement('link');l.rel='manifest';l.href=url;document.head.appendChild(l);
+})();
+
+/* ══ SERVICE WORKER ══════════════════════════════════════════ */
+(function(){
+  if(!('serviceWorker' in navigator)) return;
+  const sw=`const C='treino-v3';
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil(clients.claim()));
+self.addEventListener('fetch',e=>{e.respondWith(caches.open(C).then(cache=>cache.match(e.request).then(cached=>{const net=fetch(e.request).then(r=>{cache.put(e.request,r.clone());return r;}).catch(()=>cached);return cached||net;})));});`;
+  const url=URL.createObjectURL(new Blob([sw],{type:'application/javascript'}));
+  navigator.serviceWorker.register(url,{scope:'./'}).catch(()=>{});
+})();
+
+/* ══ INSTALL PROMPT ══════════════════════════════════════════ */
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredPrompt=e;
+  if(!sessionStorage.getItem('banner-shown')){sessionStorage.setItem('banner-shown','1');setTimeout(showBanner,600);}
+  else showChip();
+});
+window.addEventListener('appinstalled',()=>{
+  deferredPrompt=null;
+  document.getElementById('install-banner').classList.add('hidden');
+  document.getElementById('install-chip').classList.remove('visible');
+});
+function showBanner(){document.getElementById('install-banner').classList.remove('hidden');}
+function showChip(){document.getElementById('install-chip').classList.add('visible');}
+document.getElementById('btn-install').addEventListener('click',async()=>{
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt=null;
+  document.getElementById('install-banner').classList.add('hidden');
+});
+document.getElementById('btn-skip').addEventListener('click',()=>{
+  document.getElementById('install-banner').classList.add('hidden'); showChip();
+});
+document.getElementById('install-banner').addEventListener('click',function(e){
+  if(e.target===this){this.classList.add('hidden');showChip();}
+});
+
+/* ══ TIMER ═══════════════════════════════════════════════════ */
+function parseSec(d){
+  const a=d.match(/(\d+)[\–\-](\d+)\s*min/);if(a)return+a[2]*60;
+  const b=d.match(/(\d+)\s*min/);if(b)return+b[1]*60;
+  const c=d.match(/(\d+)s/);if(c)return+c[1];
+  return 60;
+}
+function fmt(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
+function tStart(i,tot){
+  if(timers[i]?.iv)clearInterval(timers[i].iv);
+  let r=timers[i]?.rem??tot;
+  timers[i]={...timers[i],tot,rem:r,run:true,done:false};
+  timers[i].iv=setInterval(()=>{
+    r--;timers[i].rem=r;
+    if(r<=0){clearInterval(timers[i].iv);timers[i]={...timers[i],run:false,done:true,rem:0};beep();}
+    updateTimerUI(i);
+  },1000);
+  updateTimerUI(i);
+}
+function tPause(i){clearInterval(timers[i]?.iv);if(timers[i])timers[i].run=false;updateTimerUI(i);}
+function tReset(i,tot){clearInterval(timers[i]?.iv);timers[i]={tot,rem:tot,run:false,done:false};updateTimerUI(i);}
+function tToggle(i,tot){
+  const t=timers[i];
+  if(!t||t.done){tReset(i,tot);tStart(i,tot);}
+  else if(t.run)tPause(i);
+  else tStart(i,t.rem);
+}
+function updateTimerUI(i){
+  const d=document.getElementById(`td-${i}`);
+  if(!d)return;
+  const t=timers[i];
+  d.textContent=fmt(t?.rem??0);
+  d.className='timer-disp'+(t?.run?' running':t?.done?' done':'');
+  const b=document.getElementById(`tplay-${i}`);
+  if(b)b.textContent=t?.run?'⏸':'▶';
+}
+function beep(){
+  try{
+    const a=new(window.AudioContext||window.webkitAudioContext)();
+    [0,.3,.6].forEach(t=>{
+      const o=a.createOscillator(),g=a.createGain();
+      o.connect(g);g.connect(a.destination);
+      o.frequency.value=880;g.gain.value=.3;
+      o.start(a.currentTime+t);o.stop(a.currentTime+t+.18);
+    });
+  }catch(e){}
+}
+
+/* ══ SVG CHECKMARK ══════════════════════════════════════════ */
+const CHECK_SVG=`<svg viewBox="0 0 16 16"><polyline points="2,8 6,12 14,4"/></svg>`;
+
+/* ══ WEIGHT LOG ═════════════════════════════════════════════ */
+function weightKey(dayIdx,exIdx){return`${dayIdx}_${exIdx}`;}
+
+function saveWeight(dayIdx,exIdx){
+  const inp=document.getElementById(`wi-${dayIdx}-${exIdx}`);
+  if(!inp) return;
+  const val=parseFloat(inp.value);
+  if(!val||val<=0){showToast('⚠️ Digite um peso válido');return;}
+  const key=weightKey(dayIdx,exIdx);
+  if(!weightLog[key]) weightLog[key]=[];
+  weightLog[key].unshift({w:val,d:todayStr()});
+  if(weightLog[key].length>10) weightLog[key].length=10; // keep last 10
+  saveStorage();
+  renderWeightUI(dayIdx,exIdx);
+  showToast(`💾 ${val}kg registrado!`);
+}
+
+function getLastWeight(dayIdx,exIdx){
+  const log=weightLog[weightKey(dayIdx,exIdx)];
+  return(log&&log.length)?log[0]:null;
+}
+
+function renderWeightUI(dayIdx,exIdx){
+  const last=getLastWeight(dayIdx,exIdx);
+  const el=document.getElementById(`wlast-${dayIdx}-${exIdx}`);
+  if(el) el.textContent=last?`Último: ${last.w}kg (${last.d})`:'Sem registro';
+}
+
+/* ══ RENDER DAY TABS ════════════════════════════════════════ */
+function renderDayTabs(){
+  document.getElementById('daytabs').innerHTML=DAYS.map((d,i)=>{
+    const{done,total}=getDayProgress(i);
+    const allDone=done===total&&total>0;
+    return`<button class="daytab${i===activeDay?' active':''}" onclick="selectDay(${i})"
+      style="${i===activeDay?`background:${d.color};border-color:${d.color}`:''}">
+      <span class="emoji">${allDone?'✅':d.icon}</span>
+      <span class="dlabel" style="${i===activeDay?'color:#fff':''}">${d.label}</span>
+      <span class="dtitle" style="${i===activeDay?'color:rgba(255,255,255,.75)':''}">${d.title}</span>
+      ${done>0?`<span class="dprog" style="color:${allDone?'#10B981':d.color}">${done}/${total}</span>`:'<span class="dprog"></span>'}
+    </button>`;
+  }).join('');
+}
+
+function selectDay(i){activeDay=i;openEx=null;timers={};renderDayTabs();renderContent();document.getElementById('content').scrollTop=0;}
+function switchTab(t,b){activeTab=t;openEx=null;document.querySelectorAll('.subtab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderContent();document.getElementById('content').scrollTop=0;}
+function toggleEx(i){openEx=openEx===i?null:i;renderContent();}
+
+/* ══ RENDER CONTENT ═════════════════════════════════════════ */
+function renderContent(){
+  const el=document.getElementById('content');
+  const day=DAYS[activeDay];const c=day.color;
+
+  if(activeTab==='treino'){
+    const{done,total,pct}=getDayProgress(activeDay);
+    const allDone=done===total&&total>0;
+
+    let h=`<div class="dayheader" style="background:${c}18;border:1.5px solid ${c}44">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <h2 style="color:${c}">${day.icon} ${day.title} <span style="font-weight:400;font-size:12px">— ${day.sub}</span></h2>
+        <span class="vol-badge" style="background:${c}33;color:${c}">${day.volume}</span>
+      </div>
+      <p class="dfocus" style="margin-top:6px">${day.focus}</p>
+      <div class="warmup-box"><div class="wlbl">🔥 Aquecimento</div><p>${day.warmup}</p></div>
+    </div>`;
+
+    // Progress bar
+    const countdown=getResetCountdown(activeDay);
+    h+=`<div class="prog-wrap">
+      <div class="prog-top">
+        <span class="prog-label" id="plabel-${activeDay}">${allDone?'✅ Treino concluído!':'Progresso do treino'}</span>
+        <div class="prog-right">
+          ${countdown?`<span class="reset-timer-badge">⏳ ${countdown}</span>`:''}
+          <span style="font-size:11px;font-weight:700;color:${allDone?'#10B981':c}" id="pcount-${activeDay}">${done}/${total}</span>
+          <button class="reset-day-btn" id="preset-${activeDay}" style="display:${done>0?'':'none'}"
+            onclick="resetDay(${activeDay})">↺ Resetar</button>
+        </div>
+      </div>
+      <div class="prog-track">
+        <div id="pfill-${activeDay}" style="height:100%;border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1);width:${pct}%;
+          background:${allDone?'#10B981':'linear-gradient(90deg,#10B981,#3B82F6)'};
+          box-shadow:${allDone?'0 0 8px rgba(16,185,129,.5)':'none'}"></div>
+      </div>
+    </div>`;
+
+    // Exercises
+    day.ex.forEach((ex,i)=>{
+      const open=openEx===i;
+      const tot=parseSec(ex.d);
+      const t=timers[i];
+      const rem=t?t.rem:tot;
+      const done=isChecked(activeDay,i);
+
+      h+=`<div class="ex-card${done?' is-done':''}" id="card-${activeDay}-${i}">
+        <div class="ex-row" onclick="toggleEx(${i})">
+          <div class="cb-wrap${done?' checked':''}" id="cb-${activeDay}-${i}"
+               onclick="event.stopPropagation();toggleCheck(${activeDay},${i},event)">
+            <div class="cb">${CHECK_SVG}</div>
+          </div>
+          <span class="ex-badge" style="background:${c}33;color:${c}">${ex.o}</span>
+          <span class="ex-name">${ex.n}</span>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <span class="ex-chip">${ex.s}×${ex.r}</span>
+            <span class="chevron${open?' open':''}" style="color:${done?'#10B981':c}">▾</span>
+          </div>
+        </div>
+        ${open?`<div class="ex-detail" onclick="event.stopPropagation()">
+          <div class="dbox"><div class="dlbl">Séries × Reps</div><div class="dval" style="color:${c}">${ex.s} × ${ex.r}</div></div>
+          <div class="dbox"><div class="dlbl">Descanso</div><div class="dval">${ex.d}</div></div>
+          <div class="dbox full"><div class="dlbl">💡 Dica de Execução</div><div class="dval">${ex.tip}</div></div>
+          <div class="weight-row">
+            <div class="dlbl">🏋️ Carga Usada</div>
+            <div class="weight-input-wrap">
+              <input class="weight-input" type="number" id="wi-${activeDay}-${i}" min="0" step="0.5"
+                placeholder="${(()=>{const l=getLastWeight(activeDay,i);return l?l.w:'0';})()}"
+                value="${(()=>{const l=getLastWeight(activeDay,i);return l?l.w:'';})()}">
+              <span class="weight-unit">kg</span>
+              <span class="weight-last" id="wlast-${activeDay}-${i}">${(()=>{const l=getLastWeight(activeDay,i);return l?`Último: ${l.w}kg (${l.d})`:'Sem registro';})()}</span>
+              <button class="weight-save-btn" onclick="saveWeight(${activeDay},${i})">Salvar</button>
+            </div>
+          </div>
+          <div class="timer-wrap">
+            <div class="dlbl">⏱ Timer de Descanso</div>
+            <div class="timer-row">
+              <div id="td-${i}" class="timer-disp${t?.run?' running':t?.done?' done':''}">${fmt(rem)}</div>
+              <button class="tbtn" onclick="tReset(${i},${tot})">↺</button>
+              <button class="tbtn play" id="tplay-${i}" onclick="tToggle(${i},${tot})">${t?.run?'⏸':'▶'}</button>
+            </div>
+          </div>
+          <button class="mark-btn${done?' isdone':' undone'}" id="mbtn-${activeDay}-${i}"
+            onclick="toggleCheck(${activeDay},${i},event)">
+            ${done?'✅ Marcar como não feito':'✔ Marcar como feito'}
+          </button>
+        </div>`:''}
+      </div>`;
+    });
+
+    h+=`<div class="cardio-box"><div class="clbl">Cardio Finalizador</div><p>${day.cardio}</p></div>`;
+    el.innerHTML=h;
+
+  } else if(activeTab==='semana'){
+    let h=`<div class="info-box"><h3>📅 Organização Semanal</h3><p>Distribuição recomendada. O importante é manter ao menos 1 dia de descanso antes do bloco Upper/Lower.</p></div><div class="sched-grid">`;
+    SCHEDULE.forEach(s=>{h+=`<div class="sday" style="background:${s.color}${s.treino==='OFF'?'18':'28'};border:1px solid ${s.color}33"><div class="sd">${s.dia}</div><div class="si">${s.icon}</div><div class="st" style="color:${s.treino==='OFF'?'#475569':s.color}">${s.treino}</div></div>`;});
+    h+=`</div><div class="sec-lbl">Volume por Sessão</div>`;
+    DAYS.forEach(d=>{h+=`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:7px"><span style="font-size:12px">${d.icon} <strong style="color:${d.color}">${d.title}</strong> <span style="color:var(--muted);font-size:10px">— ${d.sub}</span></span><span style="background:${d.color}22;color:${d.color};border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700">${d.volume}</span></div>`;});
+    h+=`<div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1.5px solid #3B82F644;border-radius:10px;padding:12px 13px"><strong style="font-size:13px">Total semanal</strong><span style="background:#3B82F633;color:#3B82F6;border-radius:5px;padding:4px 12px;font-size:12px;font-weight:700">~131 séries</span></div>`;
+    el.innerHTML=h;
+
+  } else if(activeTab==='frequencia'){
+    const dc={"Push A":"#3B82F6","Pull A":"#10B981","Legs A":"#EF4444","Upper":"#8B5CF6","Lower B":"#F59E0B"};
+    let h=`<div class="info-box"><h3>🔬 Frequência por Grupo Muscular</h3><p>Estimular cada músculo <strong style="color:#3B82F6">2× por semana</strong> é o ponto ótimo para hipertrofia e recomposição em intermediários.</p></div>`;
+    FREQ.forEach(f=>{h+=`<div class="freq-card"><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;font-weight:700">${f.m}</span><span style="background:${f.f>=4?'#10B98133':'#3B82F633'};color:${f.f>=4?'#10B981':'#3B82F6'};border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700">${f.f}× / semana</span></div><div class="freq-days">${f.dias.map(d=>`<span class="freq-day" style="background:${dc[d]||'#64748B'}22;color:${dc[d]||'#64748B'};border:1px solid ${dc[d]||'#64748B'}44">${d}</span>`).join('')}</div></div>`;});
+    el.innerHTML=h;
+
+  } else if(activeTab==='principios'){
+    let h=`<div class="info-box"><h3>🧬 Lógica do Split 5 Dias</h3><p>Push e Pull isolam padrões de movimento. Upper e Lower B criam o <strong style="color:#10B981">segundo estímulo semanal</strong> com abordagem diferente, maximizando síntese proteica ao longo de toda a semana.</p></div>`;
+    PRINCIPLES.forEach(p=>{h+=`<div class="pc"><div class="pi">${p.i}</div><div><h4>${p.t}</h4><p>${p.d}</p></div></div>`;});
+    h+=`<div class="sec-lbl">📐 Progressão 12 Semanas</div>`;
+    [["Sem. 1–3","#3B82F6","Adaptação Neural","Foco na técnica. Registre tudo. Carga moderada."],
+     ["Sem. 4–7","#10B981","Progressão de Carga","Aumente 2–5% toda semana que completar as reps."],
+     ["Sem. 8–10","#8B5CF6","Intensificação","Drop sets e rest-pause nos isoladores. Máximo volume."],
+     ["Sem. 11","#F59E0B","Pico","Maior carga do ciclo nos compostos. Reduza isoladores."],
+     ["Sem. 12","#EF4444","Deload","50% do volume. Mesmos exercícios. Recuperação ativa."]
+    ].forEach(([s,c2,n,d])=>{h+=`<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px"><span style="background:${c2}33;color:${c2};border-radius:5px;padding:3px 8px;font-size:9px;font-weight:700;white-space:nowrap">${s}</span><div><div style="font-size:12px;font-weight:700;color:var(--text)">${n}</div><div style="font-size:11px;color:var(--muted);margin-top:1px">${d}</div></div></div>`;});
+    h+=`<div class="info-box warn-box" style="margin-top:14px"><h4>⚠️ Importante</h4><p>Com 5 dias de treino, a recuperação é ainda mais crítica. Priorize sono, proteína alta e ao menos 1 dia de descanso entre blocos intensos. Em caso de fadiga acumulada, transforme um dia em OFF sem culpa.</p></div>`;
+    el.innerHTML=h;
+  }
+}
+
+/* ══ INIT ════════════════════════════════════════════════════ */
+loadStorage();
+renderDayTabs();
+renderContent();
+</script>
+</body>
+</html>
